@@ -1,32 +1,24 @@
-from integersModP import IntegersModP
+import math
+import matplotlib.pyplot as plot
+from plotEC import plotEC
 
-P = 9 #Set Dimention
-ZP = IntegersModP(P) #Create field
+# Set Dimention
+P = 7 
 
-#Create three instances of class
-x = ZP(6) 
-y = ZP(2)
-z = ZP(5)
+# Elliptic curve params
+a = 5
+b = 18
 
-#Arithmetic:
-#Addition
-print "x+y=%s" % (x+y)
-print "x+z=%s" % (x+z)
+# Create elliptic curve graph
+plotEC(plot, a, b, P)
 
-#Subtraction
-print "x-y=%s" % (x-y)
+# Display points
+plot.plot([1,2,3,4], [1,4,-5,6], 'ro')
 
-#Multiplication
-print "x*y=%s" % (x*y)
-print "x*z=%s" % (x*z)
 
-#Division
-print "x/y=%s" % (x/y)
+# Show graph
+plot.show()
 
-#Multiply by the number
-n = 2
-print "x*%s=%s" % (n, x*n)
-
-#Power
-n = 4
-print "y**%s=%s" % (n, y**n)
+'''from ec import EC
+ec = EC(a, b, q)
+print ec.at(13)'''
