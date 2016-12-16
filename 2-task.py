@@ -1,6 +1,5 @@
 import math
 import matplotlib.pyplot as plot
-from plotEC import plotEC
 from coord import Coord
 
 # Set Dimention
