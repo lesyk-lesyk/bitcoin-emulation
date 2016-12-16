@@ -8,8 +8,9 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-# def home(request):
-#     return render(request, 'core/home.html')
+import hashlib
+import binascii
+import CompactFIPS202 as keccak
 
 def loginview(request):
     c = {}
@@ -36,6 +37,22 @@ def save(request, onsuccess='/'):
 def create_user(username, email, password):
     user = User(username=username, email=email)
     user.set_password(password)
+
+    #SHA3_512
+    # pass_hash = keccak.SHA3_512(str(password).encode('utf-8'))
+    # pass_hash_hex = binascii.hexlify(pass_hash).decode()
+
+    # login_hash = keccak.SHA3_512(str(username).encode('utf-8'))
+    # login_hash = binascii.hexlify(login_hash).decode()
+
+    # u.userinfo.pass_hash = pass_hash
+    # u.userinfo.login_hash = login_hash
+
+    # s = "HELLO WorlD"
+    # hash = keccak.SHA3_512(s.encode('utf-8'))
+    # hex = binascii.hexlify(hash).decode()
+    # print('SHA3_512:', hex)
+
     user.save()
     return user
 
@@ -57,7 +74,8 @@ def sign_up_in(request):
 def secured(request):
     userMail = request.user.email
     message = request.user.userinfo.text
-    return render_to_response("core/secure.html", {'message': message, 'userMail': userMail})
+    checksum = request.user.userinfo.checksum
+    return render_to_response("core/secure.html", {'message': message, 'userMail': userMail, "checksum": checksum})
 
 
 
@@ -81,6 +99,11 @@ def message(request):
                 print u.userinfo.text
                 text = form.cleaned_data['message']
                 u.userinfo.text = text
+
+                m = hashlib.md5()
+                m.update(text)
+                u.userinfo.checksum = m.hexdigest()
+
                 u.save()
                 print text
             # process the data in form.cleaned_data as required

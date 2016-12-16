@@ -6,6 +6,9 @@ from django.contrib.auth.models import User
 class UserInfo(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     text = models.CharField(max_length=100)
+    pass_hash = models.CharField(max_length=100)
+    login_hash = models.CharField(max_length=100)
+    checksum = models.CharField(max_length=100)
     
     def __unicode__ (self):
       return self.text
