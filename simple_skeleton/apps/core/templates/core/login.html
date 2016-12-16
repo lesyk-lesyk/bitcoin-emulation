@@ -1,7 +1,15 @@
 <!DOCTYPE html>
 <html>
-<head></head>
+<head>
+    <style>
+        label {
+            width: 70px;
+            display: inline-block;
+        }
+    </style>
+</head>
 <body>
+<h1>Login</h1>
 <form action="/auth/" method="POST"> {% csrf_token %}
     <div data-role="fieldcontain">
         <label for="email">Email:</label><input type="email" name="email" id="email" value="" />
@@ -11,7 +19,8 @@
     </div>    
     <button type="submit" name="submit" value="submit-value">Sign in</button>
 </form>
-<body>
+<br/><br/>
+<h1>Registration</h1>
 <form action="/signup/" method="POST"> {% csrf_token %}
     <div data-role="fieldcontain">
         <label for="email">Email:</label><input type="email" name="email" id="email" value="" />
@@ -21,5 +30,4 @@
     </div>    
     <button type="submit" name="submit" value="submit-value">Sign up</button>
 </form>
-</body>
 </html>

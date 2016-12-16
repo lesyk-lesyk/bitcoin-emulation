@@ -56,7 +56,8 @@ def sign_up_in(request):
 @login_required(login_url='/login/')
 def secured(request):
     userMail = request.user.email
-    return render_to_response("core/secure.html", {'userMail': userMail})
+    message = request.user.userinfo.text
+    return render_to_response("core/secure.html", {'message': message, 'userMail': userMail})
 
 
 
@@ -75,21 +76,22 @@ def message(request):
         # check whether it's valid:
         if form.is_valid():
             if request.user.is_authenticated():
-                user = request.user
-                
+                name = request.user
+                u = User.objects.get(username=name)
+                print u.userinfo.text
                 text = form.cleaned_data['message']
-                user.message = message
-                user.save()
+                u.userinfo.text = text
+                u.save()
                 print text
             # process the data in form.cleaned_data as required
             # ...
             # redirect to a new URL:
-            return HttpResponse("Saved!")
+            return redirect('/') 
 
     # if a GET (or any other method) we'll create a blank form
     else:
-        # text = request.user.text
-        form = NameForm(initial={'message': 'Start Message'})
+        text = request.user.userinfo.text
+        form = NameForm(initial={'message': text})
 
     return render(request, "core/message.html", {'form': form})    
 
