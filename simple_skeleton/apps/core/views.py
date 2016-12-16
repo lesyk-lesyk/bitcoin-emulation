@@ -37,21 +37,16 @@ def save(request, onsuccess='/'):
 def create_user(username, email, password):
     user = User(username=username, email=email)
     user.set_password(password)
+    user.save()
 
-    #SHA3_512
-    # pass_hash = keccak.SHA3_512(str(password).encode('utf-8'))
-    # pass_hash_hex = binascii.hexlify(pass_hash).decode()
+    email_hash = keccak.SHA3_512(bytearray(email.encode('utf-8')))
+    email_hex = binascii.hexlify(email_hash)
 
-    # login_hash = keccak.SHA3_512(str(username).encode('utf-8'))
-    # login_hash = binascii.hexlify(login_hash).decode()
+    pass_hash = keccak.SHA3_512(bytearray(str(password).encode('utf-8')))
+    pass_hex = binascii.hexlify(pass_hash)    
 
-    # u.userinfo.pass_hash = pass_hash
-    # u.userinfo.login_hash = login_hash
-
-    # s = "HELLO WorlD"
-    # hash = keccak.SHA3_512(s.encode('utf-8'))
-    # hex = binascii.hexlify(hash).decode()
-    # print('SHA3_512:', hex)
+    user.userinfo.email_hash = email_hex
+    user.userinfo.pass_hash = pass_hex
 
     user.save()
     return user
