@@ -1,5 +1,5 @@
 """
-WSGI config for simple_skeleton project.
+WSGI config for bitcoin_emulation project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "simple_skeleton.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bitcoin_emulation.settings")
 
 application = get_wsgi_application()

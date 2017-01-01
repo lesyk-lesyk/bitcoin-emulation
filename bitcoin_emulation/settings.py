@@ -21,7 +21,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'simple_skeleton.apps.core',
+    'bitcoin_emulation.apps.core',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -35,7 +35,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.security.SecurityMiddleware',
 )
 
-ROOT_URLCONF = 'simple_skeleton.urls'
+ROOT_URLCONF = 'bitcoin_emulation.urls'
 
 TEMPLATES = [
     {
@@ -53,7 +53,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'simple_skeleton.wsgi.application'
+WSGI_APPLICATION = 'bitcoin_emulation.wsgi.application'
 
 
 
