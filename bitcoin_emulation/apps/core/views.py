@@ -28,7 +28,7 @@ def auth_and_login(request, onsuccess='/', onfail='/login/'):
         login(request, user)
         return redirect(onsuccess)
     else:
-        return redirect(onfail)  
+        return redirect(onfail)
 
 def save(request, onsuccess='/'):
     if request.user.is_authenticated():
@@ -40,14 +40,11 @@ def create_user(username, email, password):
     user.set_password(password)
     user.save()
 
-    email_hash = keccak.SHA3_512(bytearray(email.encode('utf-8')))
-    email_hex = binascii.hexlify(email_hash)
+    private_key = ECC.dsa.gen_priv()
+    public_key = ECC.dsa.gen_pub(private_key)
 
-    pass_hash = keccak.SHA3_512(bytearray(str(password).encode('utf-8')))
-    pass_hex = binascii.hexlify(pass_hash)    
-
-    user.userinfo.email_hash = email_hex
-    user.userinfo.pass_hash = pass_hex
+    user.userinfo.private_key = private_key
+    user.userinfo.public_key = public_key
 
     user.save()
     return user
@@ -67,13 +64,15 @@ def sign_up_in(request):
     	return redirect("/login/")
 
 @login_required(login_url='/login/')
-def secured(request):
+def user_cabinet(request):
     userMail = request.user.email
-    message = request.user.userinfo.text
-    checksum = request.user.userinfo.checksum
-    return render_to_response("core/secure.html", {'message': message, 'userMail': userMail, "checksum": checksum})
-
-
+    private_key = request.user.userinfo.private_key
+    public_key = request.user.userinfo.public_key
+    return render_to_response("core/user-cabinet.html", {
+            'userMail': userMail,
+            'private_key': private_key,
+            "public_key": public_key
+        })
 
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
@@ -113,5 +112,4 @@ def message(request):
         form = NameForm(initial={'message': text})
 
     return render(request, "core/message.html", {'form': form})    
-
    

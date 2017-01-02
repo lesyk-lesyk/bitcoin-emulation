@@ -1,6 +1,6 @@
 # Basics of Elliptic Curve Cryptography implementation on Python
 import collections
-
+import random
 
 def inv(n, q):
     """div on PN modulo a/b mod q as a * inv(b, q) mod q
@@ -215,8 +215,13 @@ class DSA(object):
         self.g = g
         self.n = ec.order(g)
         pass
+ 
+    def gen_priv(self):
+        """generate private key"""
+        priv = random.randint(1, self.n-1)
+        return priv
 
-    def gen(self, priv):
+    def gen_pub(self, priv):
         """generate pub key"""
         assert 0 < priv and priv < self.n
         return self.ec.mul(self.g, priv)
@@ -251,6 +256,7 @@ class DSA(object):
 a = 2
 b = 3
 p = 97
-P = Coord(3, 6)
+P = Coord(12, 3)
 ec = EC(a, b, p)
+dsa = DSA(ec, P)
 assert ec.order(P) <= ec.q

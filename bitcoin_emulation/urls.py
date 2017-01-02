@@ -10,5 +10,5 @@ urlpatterns = [
     url(r'^message/', core_views.message),   
     url(r'^auth/', core_views.auth_and_login),
     url(r'^signup/', core_views.sign_up_in),
-    url(r'^$', core_views.secured)
+    url(r'^$', core_views.user_cabinet)
 ]

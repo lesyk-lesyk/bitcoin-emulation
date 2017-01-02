@@ -16,10 +16,9 @@
 </head>
 <body>
   <h1>Hello, {{userMail}}!</h1>
-  <p>Your secret message:</p>
-  <p class="message">{{message}}</p>
-  <span><i>Checksum: {{checksum}}</i></span> <br/><br/>
-  <a href="/message">Edit Message</a>
+  <p>Your private key is:</p>
+  <p class="message">{{private_key}}</p>
+  <span><i>public_key: {{public_key}}</i></span> <br/><br/>
   <form action="/logout">
     <input type="submit" value="Logout" />
   </form>

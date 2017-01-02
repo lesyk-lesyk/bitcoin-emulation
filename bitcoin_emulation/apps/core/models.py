@@ -5,13 +5,11 @@ from django.contrib.auth.models import User
 
 class UserInfo(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    text = models.CharField(max_length=100)
-    pass_hash = models.CharField(max_length=100)
-    email_hash = models.CharField(max_length=100)
-    checksum = models.CharField(max_length=100)
+    private_key = models.CharField(max_length=100)
+    public_key = models.CharField(max_length=100)
     
     def __unicode__ (self):
-      return self.text
+      return self.user.email
 
     @receiver(post_save, sender=User)
     def create_user_userinfo(sender, instance, created, **kwargs):
@@ -21,3 +19,4 @@ class UserInfo(models.Model):
     @receiver(post_save, sender=User)
     def save_user_userinfo(sender, instance, **kwargs):
         instance.userinfo.save()
+        
