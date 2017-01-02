@@ -1,3 +1,15 @@
+/* General */
+.col-centered{
+  float: none;
+  margin: 0 auto;
+}
+
+/* Auth */
+.auth {
+  margin-top: 50px;
+}
+/* Auth End */
+
 /* User Cabinet */
 .message {
   margin-top: 10px;
