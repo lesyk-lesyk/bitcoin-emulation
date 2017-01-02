@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 import hashlib
 import binascii
 import CompactFIPS202 as keccak
+import ecc as ECC
 
 def loginview(request):
     c = {}
