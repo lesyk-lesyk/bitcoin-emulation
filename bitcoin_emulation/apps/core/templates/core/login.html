@@ -1,14 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        label {
-            width: 70px;
-            display: inline-block;
-        }
-    </style>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
 <h1>Login</h1>
 <form action="/auth/" method="POST"> {% csrf_token %}
     <div data-role="fieldcontain">
@@ -30,4 +22,4 @@
     </div>    
     <button type="submit" name="submit" value="submit-value">Sign up</button>
 </form>
-</html>
+{% endblock %}

@@ -1,26 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    form {
-      display: inline;
-    }
-    .message {
-      margin-top: 10px;
-      margin-bottom: 10px;
-      padding: 10px;
-      border: 1px solid gray;
-      width: 300px;
-    }
-  </style>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
   <h1>Hello, {{userMail}}!</h1>
   <p>Your private key is:</p>
   <p class="message">{{private_key}}</p>
   <span><i>public_key: {{public_key}}</i></span> <br/><br/>
-  <form action="/logout">
+  
+  <form style="display: inline" action="/logout">
     <input type="submit" value="Logout" />
   </form>
-</body>
-</html>
+{% endblock %}
