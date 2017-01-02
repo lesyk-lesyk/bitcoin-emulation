@@ -2,10 +2,46 @@
 
 {% block content %}
   <h1>Hello, {{userMail}}!</h1>
-  <p>Your private key is:</p>
-  <p class="message">{{private_key}}</p>
-  <span><i>public_key: {{public_key}}</i></span> <br/><br/>
-  
+
+<div class="row">
+	<div class="col-xs-2">
+		<div class="panel-group" id="accordion">
+			<div class="panel panel-default" id="panel2">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<a data-toggle="collapse" data-target="#private-key" href="#private-key">
+                Private key
+              </a>
+					</h4>
+
+				</div>
+				<div id="private-key" class="panel-collapse collapse">
+					<div class="panel-body">{{private_key}}</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-xs-2">
+		<div class="panel-group" id="accordion">
+			<div class="panel panel-default" id="panel1">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<a data-toggle="collapse" data-target="#public-key" href="#public-key">
+                Public key
+              </a>
+					</h4>
+
+				</div>
+				<div id="public-key" class="panel-collapse collapse">
+					<div class="panel-body">{{public_key}}</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
   <form style="display: inline" action="/logout">
     <input type="submit" value="Logout" />
   </form>
