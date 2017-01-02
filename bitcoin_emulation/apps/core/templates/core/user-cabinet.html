@@ -1,19 +1,20 @@
 {% extends 'base.html' %}
 
-{% block content %}
-  <h1>Hello, {{userMail}}!</h1>
+{% block navbar %} 
+{% include 'partials/nav-bar.html' with userMail=userMail %} 
+{% endblock %}
 
+{% block content %}
 <div class="row">
 	<div class="col-xs-2">
 		<div class="panel-group" id="accordion">
 			<div class="panel panel-default" id="panel2">
 				<div class="panel-heading">
 					<h4 class="panel-title">
-						<a data-toggle="collapse" data-target="#private-key" href="#private-key">
+						<a data-toggle="collapse" data-target="#private-key" class="collapsed pointer">
                 Private key
               </a>
 					</h4>
-
 				</div>
 				<div id="private-key" class="panel-collapse collapse">
 					<div class="panel-body">{{private_key}}</div>
@@ -26,11 +27,10 @@
 			<div class="panel panel-default" id="panel1">
 				<div class="panel-heading">
 					<h4 class="panel-title">
-						<a data-toggle="collapse" data-target="#public-key" href="#public-key">
+						<a data-toggle="collapse" data-target="#public-key" class="collapsed pointer">
                 Public key
               </a>
 					</h4>
-
 				</div>
 				<div id="public-key" class="panel-collapse collapse">
 					<div class="panel-body">{{public_key}}</div>
@@ -39,10 +39,4 @@
 		</div>
 	</div>
 </div>
-
-
-
-  <form style="display: inline" action="/logout">
-    <input type="submit" value="Logout" />
-  </form>
 {% endblock %}

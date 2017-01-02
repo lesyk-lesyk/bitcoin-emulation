@@ -1,7 +1,5 @@
-from django.shortcuts import render
-
+from django.shortcuts import render, render_to_response, redirect
 from django.core.context_processors import csrf
-from django.shortcuts import render_to_response, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout
 from django.http import HttpResponse
@@ -20,7 +18,7 @@ def loginview(request):
 
 def logoutview(request):
     logout(request)
-    return HttpResponse("Bye!")
+    return redirect('/login/')
 
 def auth_and_login(request, onsuccess='/', onfail='/login/'):
     user = authenticate(username=request.POST['email'], password=request.POST['password'])
@@ -74,8 +72,6 @@ def user_cabinet(request):
             "public_key": public_key
         })
 
-from django.shortcuts import render
-from django.http import HttpResponseRedirect
 
 from django import forms
 class NameForm(forms.Form):
