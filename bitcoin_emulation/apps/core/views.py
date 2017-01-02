@@ -62,6 +62,11 @@ def sign_up_in(request):
     	return redirect("/login/")
 
 @login_required(login_url='/login/')
+def shop(request):
+    userMail = request.user.email
+    return render_to_response('core/shop.html', {'userMail': userMail})
+
+@login_required(login_url='/login/')
 def user_cabinet(request):
     userMail = request.user.email
     private_key = request.user.userinfo.private_key

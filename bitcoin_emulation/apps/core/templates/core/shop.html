@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block navbar %} 
+{% include 'partials/nav-bar.html' with userMail=userMail %} 
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2">
+      <div class="row">
+
+        <div class="col-sm-4 col-lg-4 col-md-4">
+          <div class="thumbnail product-card">
+            <img src="http://placehold.it/320x150" alt="">
+            <div class="caption">
+              <h4 class="pull-right">$24.99</h4>
+              <h4><a href="#">First Product</a>
+              </h4>
+              <p>This is a short description. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            </div>          
+            <div class="ratings pull-left">
+              <p>15 reviews</p>
+              <p>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+              </p>
+            </div>
+            <div class="button-container pull-right">
+            <button type="button" class="btn btn-success center-block" >
+              <span class="glyphicon glyphicon-shopping-cart"></span> Buy
+            </button>
+            </div>            
+          </div>
+        </div>
+
+        <div class="col-sm-4 col-lg-4 col-md-4">
+          <div class="thumbnail product-card">
+            <img src="http://placehold.it/320x150" alt="">
+            <div class="caption">
+              <h4 class="pull-right">$60.50</h4>
+              <h4><a href="#">Second Product</a>
+              </h4>
+              <p>This is a short description. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            </div>          
+            <div class="ratings pull-left">
+              <p>10 reviews</p>
+              <p>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star-empty"></span>
+              </p>
+            </div>
+            <div class="button-container pull-right">
+            <button type="button" class="btn btn-success center-block" >
+              <span class="glyphicon glyphicon-shopping-cart"></span> Buy
+            </button>
+            </div>            
+          </div>
+        </div>
+
+        <div class="col-sm-4 col-lg-4 col-md-4">
+          <div class="thumbnail product-card">
+            <img src="http://placehold.it/320x150" alt="">
+            <div class="caption">
+              <h4 class="pull-right">$50.70</h4>
+              <h4><a href="#">Third Product</a>
+              </h4>
+              <p>This is a short description. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            </div>          
+            <div class="ratings pull-left">
+              <p>8 reviews</p>
+              <p>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star-empty"></span>
+                <span class="glyphicon glyphicon-star-empty"></span>
+              </p>
+            </div>
+            <div class="button-container pull-right">
+            <button type="button" class="btn btn-success center-block" >
+              <span class="glyphicon glyphicon-shopping-cart"></span> Buy
+            </button>
+            </div>            
+          </div>
+        </div>
+
+        <div class="col-sm-4 col-lg-4 col-md-4">
+          <div class="thumbnail product-card">
+            <img src="http://placehold.it/320x150" alt="">
+            <div class="caption">
+              <h4 class="pull-right">$10.99</h4>
+              <h4><a href="#">Fourth Product</a>
+              </h4>
+              <p>This is a short description. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            </div>          
+            <div class="ratings pull-left">
+              <p>14 reviews</p>
+              <p>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+              </p>
+            </div>
+            <div class="button-container pull-right">
+            <button type="button" class="btn btn-success center-block" >
+              <span class="glyphicon glyphicon-shopping-cart"></span> Buy
+            </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-4 col-lg-4 col-md-4">
+          <div class="thumbnail product-card">
+            <img src="http://placehold.it/320x150" alt="">
+            <div class="caption">
+              <h4 class="pull-right">$16.20</h4>
+              <h4><a href="#">Fifth Product</a>
+              </h4>
+              <p>This is a short description. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            </div>          
+            <div class="ratings pull-left">
+              <p>9 reviews</p>
+              <p>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+                <span class="glyphicon glyphicon-star"></span>
+              </p>
+            </div>
+            <div class="button-container pull-right">
+            <button type="button" class="btn btn-success center-block" >
+              <span class="glyphicon glyphicon-shopping-cart"></span> Buy
+            </button>
+            </div>            
+          </div>
+        </div>                     
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
