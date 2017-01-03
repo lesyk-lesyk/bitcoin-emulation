@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block navbar %} 
+{% include 'partials/nav-bar.html' with userMail=userMail %} 
+{% endblock %}
+
+{% block content %}
+<form action="/add-product/" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Add to Store" />
+</form>
+{% endblock %}

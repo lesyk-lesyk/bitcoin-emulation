@@ -5,6 +5,9 @@ from django.contrib.auth import logout
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django import forms
+
+from models import Product
 
 import hashlib
 import binascii
@@ -78,39 +81,32 @@ def user_cabinet(request):
         })
 
 
-from django import forms
-class NameForm(forms.Form):
-    message = forms.CharField(label='Message', max_length=100)
+class AddProductForm(forms.Form):
+    name = forms.CharField(label='Name', max_length=100)
+    desc = forms.CharField(label='Description', max_length=500)
+    price = forms.IntegerField(min_value=0)
 
-def message(request):
+@login_required(login_url='/login/')
+def add_product(request):
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
-        form = NameForm(request.POST)
+        form = AddProductForm(request.POST)
         # check whether it's valid:
         if form.is_valid():
             if request.user.is_authenticated():
-                name = request.user
-                u = User.objects.get(username=name)
-                print u.userinfo.text
-                text = form.cleaned_data['message']
-                u.userinfo.text = text
-
-                m = hashlib.md5()
-                m.update(text)
-                u.userinfo.checksum = m.hexdigest()
-
-                u.save()
-                print text
-            # process the data in form.cleaned_data as required
-            # ...
+                user = request.user
+                product_name = form.cleaned_data['name']
+                product_desc = form.cleaned_data['desc']
+                product_price = form.cleaned_data['price']                
+                p = Product(id=None, name=product_name, desc=product_desc, price=product_price, owner=user)
+                p.save()
+                print p
             # redirect to a new URL:
-            return redirect('/') 
+            return redirect('/shop') 
 
     # if a GET (or any other method) we'll create a blank form
     else:
-        text = request.user.userinfo.text
-        form = NameForm(initial={'message': text})
+        form = AddProductForm()
 
-    return render(request, "core/message.html", {'form': form})    
-   
+    return render(request, "core/add-product.html", {'form': form})

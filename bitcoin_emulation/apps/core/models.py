@@ -19,4 +19,10 @@ class UserInfo(models.Model):
     @receiver(post_save, sender=User)
     def save_user_userinfo(sender, instance, **kwargs):
         instance.userinfo.save()
-        
+
+class Product(models.Model):
+    owner = models.ForeignKey(User)
+    name = models.CharField(max_length=100)
+    desc = models.CharField(max_length=500)
+    price = models.IntegerField(default=0)
+    in_shop = models.BooleanField(default=True)
