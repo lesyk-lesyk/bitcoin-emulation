@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django import forms
 
 from models import Product
+from models import KeyPair, Block, Transaction, Input, Output
 
 import hashlib
 import binascii
@@ -71,11 +72,50 @@ def buy_product(request, product_id):
 @login_required(login_url='/login/')
 def user_cabinet(request):
     userMail = request.user.email
-    balance = 0
+    balance = get_balance(request.user)
     return render_to_response("core/user-cabinet.html", {
             'userMail': userMail,
             'balance': balance
         })
+
+def get_balance(user):
+    user_keys = user.keypair_set.all()
+    blocks = Block.objects.all()
+
+    balance = 0
+
+    for keypair in user_keys:
+        for block in blocks:
+            for tran in block.transaction_set.all():
+                for output in tran.output_set.all():
+                    if keypair.public_x == output.address_x and keypair.public_y == output.address_y:
+                        balance = balance + output.amount
+
+    return balance
+
+@login_required(login_url='/login/')
+def create_first(request):
+    user = request.user
+    private, public = ECC.make_keypair()
+    public_x, public_y = public
+
+    kp = KeyPair(owner=user, private=hex(private), public_x=hex(public_x), public_y=hex(public_y))
+    kp.save()
+
+    tr = Transaction(block=None, status='done')
+    tr.save()
+
+    ou = Output(transaction=tr, address_x=hex(public_x), address_y=hex(public_y), amount=500)
+    ou.save()
+
+    block = Block()
+    block.save()
+
+    tr.block = block
+    tr.save()
+
+    return HttpResponse('First block created! :)')
+
 
 class AddProductForm(forms.Form):
     name = forms.CharField(label='Name', max_length=100)

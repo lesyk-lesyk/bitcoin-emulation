@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^signup/', core_views.sign_up_in),
     url(r'^shop/', core_views.shop),
     url(r'^add-product/', core_views.add_product),
-    url(r'^buy-product/(?P<product_id>[0-9]+)/', core_views.buy_product),      
+    url(r'^buy-product/(?P<product_id>[0-9]+)/', core_views.buy_product),
+    url(r'^create-first/', core_views.create_first),
     url(r'^$', core_views.user_cabinet)
 ]

@@ -28,5 +28,36 @@ class Product(models.Model):
 
 class KeyPair(models.Model):
     owner = models.ForeignKey(User)
-    private = models.IntegerField(default=0)
-    public = models.IntegerField(default=0)
+    private = models.CharField(max_length=500)
+    public_x = models.CharField(max_length=500)
+    public_y = models.CharField(max_length=500)
+    status = models.CharField(max_length=50, default="active")
+
+class Block(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True)
+    prev_hash = models.CharField(max_length=500, default='')
+    nonce = models.IntegerField(default=0)
+    transactions_hash = models.CharField(max_length=500, default='')
+
+class Transaction(models.Model):
+    block = models.ForeignKey(Block, null=True)
+    status = models.CharField(max_length=50, default="pending")
+
+class Input(models.Model):
+    transaction = models.ForeignKey(Transaction)
+    address_x = models.CharField(max_length=500)
+    address_y = models.CharField(max_length=500)
+    signature_r = models.CharField(max_length=500)
+    signature_s = models.CharField(max_length=500)
+    
+
+class Output(models.Model):
+    transaction = models.ForeignKey(Transaction)
+    address_x = models.CharField(max_length=500)
+    address_y = models.CharField(max_length=500)
+    amount = models.IntegerField(default=0)
+
+# class Address(models.Model):
+#     owner = models.ForeignKey(User)
+#     x = models.IntegerField(default=0)
+#     y = models.IntegerField(default=0)
