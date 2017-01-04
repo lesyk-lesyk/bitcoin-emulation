@@ -1,262 +1,236 @@
-# Basics of Elliptic Curve Cryptography implementation on Python
 import collections
+import hashlib
 import random
 
-def inv(n, q):
-    """div on PN modulo a/b mod q as a * inv(b, q) mod q
-    >>> assert n * inv(n, q) % q == 1
+EllipticCurve = collections.namedtuple('EllipticCurve', 'name p a b g n h')
+
+curve = EllipticCurve(
+    'secp256k1',
+    # Field characteristic.
+    p=0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f,
+    # Curve coefficients.
+    a=0,
+    b=7,
+    # Base point.
+    g=(0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
+       0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8),
+    # Subgroup order.
+    n=0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141,
+    # Subgroup cofactor.
+    h=1,
+)
+
+
+# Modular arithmetic ##########################################################
+
+def inverse_mod(k, p):
+    """Returns the inverse of k modulo p.
+
+    This function returns the only integer x such that (x * k) % p == 1.
+
+    k must be non-zero and p must be a prime.
     """
-    for i in range(q):
-        if (n * i) % q == 1:
-            return i
-        pass
-    assert False, "unreached"
-    pass
+    if k == 0:
+        raise ZeroDivisionError('division by zero')
+
+    if k < 0:
+        # k ** -1 = p - (-k) ** -1  (mod p)
+        return p - inverse_mod(-k, p)
+
+    # Extended Euclidean algorithm.
+    s, old_s = 0, 1
+    t, old_t = 1, 0
+    r, old_r = p, k
+
+    while r != 0:
+        quotient = old_r // r
+        old_r, r = r, old_r - quotient * r
+        old_s, s = s, old_s - quotient * s
+        old_t, t = t, old_t - quotient * t
+
+    gcd, x, y = old_r, old_s, old_t
+
+    assert gcd == 1
+    assert (k * x) % p == 1
+
+    return x % p
 
 
-def sqrt(n, q):
-    """sqrt on PN modulo: returns two numbers or exception if not exist
-    >>> assert (sqrt(n, q)[0] ** 2) % q == n
-    >>> assert (sqrt(n, q)[1] ** 2) % q == n
-    """
-    assert n < q
-    for i in range(1, q):
-        if i * i % q == n:
-            return (i, q - i)
-        pass
-    raise Exception("not found")
+# Functions that work on curve points #########################################
+
+def is_on_curve(point):
+    """Returns True if the given point lies on the elliptic curve."""
+    if point is None:
+        # None represents the point at infinity.
+        return True
+
+    x, y = point
+
+    return (y * y - x * x * x - curve.a * x - curve.b) % curve.p == 0
 
 
-Coord = collections.namedtuple("Coord", ["x", "y"])
+def point_neg(point):
+    """Returns -point."""
+    assert is_on_curve(point)
+
+    if point is None:
+        # -0 = 0
+        return None
+
+    x, y = point
+    result = (x, -y % curve.p)
+
+    assert is_on_curve(result)
+
+    return result
 
 
-class EC(object):
-    """System of Elliptic Curve"""
-    def __init__(self, a, b, q):
-        """elliptic curve as: (y**2 = x**3 + a * x + b) mod q
-        - a, b: params of curve formula
-        - q: prime number
-        """
-        assert 0 < a and a < q and 0 < b and b < q and q > 2
-        assert (4 * (a ** 3) + 27 * (b ** 2))  % q != 0
-        self.a = a
-        self.b = b
-        self.q = q
-        # just as unique ZERO value representation for "add": (not on curve)
-        self.zero = Coord(0, 0)
-        pass
+def point_add(point1, point2):
+    """Returns the result of point1 + point2 according to the group law."""
+    assert is_on_curve(point1)
+    assert is_on_curve(point2)
 
-    def is_valid(self, p):
-        if p == self.zero: return True
-        l = (p.y ** 2) % self.q
-        r = ((p.x ** 3) + self.a * p.x + self.b) % self.q
-        return l == r
+    if point1 is None:
+        # 0 + point2 = point2
+        return point2
+    if point2 is None:
+        # point1 + 0 = point1
+        return point1
 
-    def at(self, x):
-        """find points on curve at x
-        - x: int < q
-        - returns: ((x, y), (x,-y)) or not found exception
-        >>> a, ma = ec.at(x)
-        >>> assert a.x == ma.x and a.x == x
-        >>> assert a.x == ma.x and a.x == x
-        >>> assert ec.neg(a) == ma
-        >>> assert ec.is_valid(a) and ec.is_valid(ma)
-        """
-        assert x < self.q
-        ysq = (x ** 3 + self.a * x + self.b) % self.q
-        y, my = sqrt(ysq, self.q)
-        return Coord(x, y), Coord(x, my)
+    x1, y1 = point1
+    x2, y2 = point2
 
-    def neg(self, p):
-        """negate p
-        >>> assert ec.is_valid(ec.neg(p))
-        """
-        return Coord(p.x, -p.y % self.q)
+    if x1 == x2 and y1 != y2:
+        # point1 + (-point1) = 0
+        return None
 
-    def add(self, p1, p2):
-        """<add> of elliptic curve: negate of 3rd cross point of (p1,p2) line
-        >>> d = ec.add(a, b)
-        >>> assert ec.is_valid(d)
-        >>> assert ec.add(d, ec.neg(b)) == a
-        >>> assert ec.add(a, ec.neg(a)) == ec.zero
-        >>> assert ec.add(a, b) == ec.add(b, a)
-        >>> assert ec.add(a, ec.add(b, c)) == ec.add(ec.add(a, b), c)
-        """
-        if p1 == self.zero: return p2
-        if p2 == self.zero: return p1
-        if p1.x == p2.x and (p1.y != p2.y or p1.y == 0):
-            # p1 + -p1 == 0
-            return self.zero
-        if p1.x == p2.x:
-            # p1 + p1: use tangent line of p1 as (p1,p1) line
-            l = (3 * p1.x * p1.x + self.a) * inv(2 * p1.y, self.q) % self.q
-            pass
-        else:
-            l = (p2.y - p1.y) * inv(p2.x - p1.x, self.q) % self.q
-            pass
-        x = (l * l - p1.x - p2.x) % self.q
-        y = (l * (p1.x - x) - p1.y) % self.q
-        return Coord(x, y)
+    if x1 == x2:
+        # This is the case point1 == point2.
+        m = (3 * x1 * x1 + curve.a) * inverse_mod(2 * y1, curve.p)
+    else:
+        # This is the case point1 != point2.
+        m = (y1 - y2) * inverse_mod(x1 - x2, curve.p)
 
-    def mul(self, p, n):
-        """n times <mul> of elliptic curve
-        >>> m = ec.mul(p, n)
-        >>> assert ec.is_valid(m)
-        >>> assert ec.mul(p, 0) == ec.zero
-        """
-        r = self.zero
-        m2 = p
-        # O(log2(n)) add
-        while 0 < n:
-            if n & 1 == 1:
-                r = self.add(r, m2)
-                pass
-            n, m2 = n >> 1, self.add(m2, m2)
-            pass
-        # [ref] O(n) add
-        #for i in range(n):
-        #    r = self.add(r, p)
-        #    pass
-        return r
+    x3 = m * m - x1 - x2
+    y3 = y1 + m * (x3 - x1)
+    result = (x3 % curve.p,
+              -y3 % curve.p)
 
-    def order(self, g):
-        """order of point g
-        >>> o = ec.order(g)
-        >>> assert ec.is_valid(a) and ec.mul(a, o) == ec.zero
-        >>> assert o <= ec.q
-        """
-        assert self.is_valid(g) and g != self.zero
-        for i in range(1, self.q + 1):
-            if self.mul(g, i) == self.zero:
-                return i
-            pass
-        raise Exception("Invalid order")
-    pass
+    assert is_on_curve(result)
+
+    return result
 
 
-class ElGamal(object):
-    """ElGamal Encryption
-    pub key encryption as replacing (mulmod, powmod) to (ec.add, ec.mul)
-    - ec: elliptic curve
-    - g: (random) a point on ec
-    """
-    def __init__(self, ec, g):
-        assert ec.is_valid(g)
-        self.ec = ec
-        self.g = g
-        self.n = ec.order(g)
-        pass
+def scalar_mult(k, point):
+    """Returns k * point computed using the double and point_add algorithm."""
+    assert is_on_curve(point)
 
-    def gen(self, priv):
-        """generate pub key
-        - priv: priv key as (random) int < ec.q
-        - returns: pub key as points on ec
-        """
-        return self.ec.mul(g, priv)
+    if k % curve.n == 0 or point is None:
+        return None
 
-    def enc(self, plain, pub, r):
-        """encrypt
-        - plain: data as a point on ec
-        - pub: pub key as points on ec
-        - r: randam int < ec.q
-        - returns: (cipher1, ciper2) as points on ec
-        """
-        assert self.ec.is_valid(plain)
-        assert self.ec.is_valid(pub)
-        return (self.ec.mul(g, r), self.ec.add(plain, self.ec.mul(pub, r)))
+    if k < 0:
+        # k * point = -k * (-point)
+        return scalar_mult(-k, point_neg(point))
 
-    def dec(self, cipher, priv):
-        """decrypt
-        - chiper: (chiper1, chiper2) as points on ec
-        - priv: private key as int < ec.q
-        - returns: plain as a point on ec
-        """
-        c1, c2 = cipher
-        assert self.ec.is_valid(c1) and ec.is_valid(c2)
-        return self.ec.add(c2, self.ec.neg(self.ec.mul(c1, priv)))
-    pass
+    result = None
+    addend = point
+
+    while k:
+        if k & 1:
+            # Add.
+            result = point_add(result, addend)
+
+        # Double.
+        addend = point_add(addend, addend)
+
+        k >>= 1
+
+    assert is_on_curve(result)
+
+    return result
 
 
-class DiffieHellman(object):
-    """Elliptic Curve Diffie Hellman (Key Agreement)
-    - ec: elliptic curve
-    - g: a point on ec
-    """
-    def __init__(self, ec, g):
-        self.ec = ec
-        self.g = g
-        self.n = ec.order(g)
-        pass
+# Keypair generation and ECDSA ################################################
 
-    def gen(self, priv):
-        """generate pub key"""
-        assert 0 < priv and priv < self.n
-        return self.ec.mul(self.g, priv)
+def make_keypair():
+    """Generates a random private-public key pair."""
+    private_key = random.randrange(1, curve.n)
+    public_key = scalar_mult(private_key, curve.g)
 
-    def secret(self, priv, pub):
-        """calc shared secret key for the pair
-        - priv: my private key as int
-        - pub: partner pub key as a point on ec
-        - returns: shared secret as a point on ec
-        """
-        assert self.ec.is_valid(pub)
-        assert self.ec.mul(pub, self.n) == self.ec.zero
-        return self.ec.mul(pub, priv)
-    pass
+    return private_key, public_key
 
 
-class DSA(object):
-    """ECDSA
-    - ec: elliptic curve
-    - g: a point on ec
-    """
-    def __init__(self, ec, g):
-        self.ec = ec
-        self.g = g
-        self.n = ec.order(g)
-        pass
- 
-    def gen_priv(self):
-        """generate private key"""
-        priv = random.randint(1, self.n-1)
-        return priv
+def hash_message(message):
+    """Returns the truncated SHA521 hash of the message."""
+    message_hash = hashlib.sha512(message).digest()
+    e = int(message_hash.encode('hex'), 16)
 
-    def gen_pub(self, priv):
-        """generate pub key"""
-        assert 0 < priv and priv < self.n
-        return self.ec.mul(self.g, priv)
+    # FIPS 180 says that when a hash needs to be truncated, the rightmost bits
+    # should be discarded.
+    z = e >> (e.bit_length() - curve.n.bit_length())
 
-    def sign(self, hashval, priv, r):
-        """generate signature
-        - hashval: hash value of message as int
-        - priv: priv key as int
-        - r: random int 
-        - returns: signature as (int, int)
-        """
-        assert 0 < r and r < self.n
-        m = self.ec.mul(self.g, r)
-        return (m.x, inv(r, self.n) * (hashval + m.x * priv) % self.n)
+    assert z.bit_length() <= curve.n.bit_length()
 
-    def validate(self, hashval, sig, pub):
-        """validate signature
-        - hashval: hash value of message as int
-        - sig: signature as (int, int)
-        - pub: pub key as a point on ec
-        """
-        assert self.ec.is_valid(pub)
-        assert self.ec.mul(pub, self.n) == self.ec.zero
-        w = inv(sig[1], self.n)
-        u1, u2 = hashval * w % self.n, sig[0] * w % self.n
-        p = self.ec.add(self.ec.mul(self.g, u1), self.ec.mul(pub, u2))
-        return p.x % self.n == sig[0]
-    pass
+    return z
 
 
-# shared elliptic curve system 
-a = 2
-b = 3
-p = 97
-P = Coord(12, 3)
-ec = EC(a, b, p)
-dsa = DSA(ec, P)
-assert ec.order(P) <= ec.q
+def sign_message(private_key, message):
+    z = hash_message(message)
+
+    r = 0
+    s = 0
+
+    while not r or not s:
+        k = random.randrange(1, curve.n)
+        x, y = scalar_mult(k, curve.g)
+
+        r = x % curve.n
+        s = ((z + r * private_key) * inverse_mod(k, curve.n)) % curve.n
+
+    return (r, s)
+
+
+def verify_signature(public_key, message, signature):
+    z = hash_message(message)
+
+    r, s = signature
+
+    w = inverse_mod(s, curve.n)
+    u1 = (z * w) % curve.n
+    u2 = (r * w) % curve.n
+
+    x, y = point_add(scalar_mult(u1, curve.g),
+                     scalar_mult(u2, public_key))
+
+    if (r % curve.n) == (x % curve.n):
+        return 'signature matches'
+    else:
+        return 'invalid signature'
+
+
+print('Curve:', curve.name)
+
+private, public = make_keypair()
+print("Private key:", hex(private))
+print("Public key: (0x{:x}, 0x{:x})".format(*public))
+
+msg = b'Hello!'
+signature = sign_message(private, msg)
+
+print()
+print('Message:', msg)
+print('Signature: (0x{:x}, 0x{:x})'.format(*signature))
+print('Verification:', verify_signature(public, msg, signature))
+
+msg = b'Hi there!'
+print()
+print('Message:', msg)
+print('Verification:', verify_signature(public, msg, signature))
+
+private, public = make_keypair()
+
+msg = b'Hello!'
+print()
+print('Message:', msg)
+print("Public key: (0x{:x}, 0x{:x})".format(*public))
+print('Verification:', verify_signature(public, msg, signature))
