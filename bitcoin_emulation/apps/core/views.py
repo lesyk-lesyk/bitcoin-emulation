@@ -67,7 +67,8 @@ def sign_up_in(request):
 @login_required(login_url='/login/')
 def shop(request):
     userMail = request.user.email
-    return render_to_response('core/shop.html', {'userMail': userMail})
+    products = Product.objects.all()
+    return render_to_response('core/shop.html', {'userMail': userMail, 'products': products})
 
 @login_required(login_url='/login/')
 def user_cabinet(request):
