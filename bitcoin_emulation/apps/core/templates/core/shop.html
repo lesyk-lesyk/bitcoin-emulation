@@ -13,7 +13,7 @@
         {% for product in products %}
         <div class="col-sm-4 col-lg-4 col-md-4">
           <div class="thumbnail product-card">
-            <img src="http://placehold.it/320x150" alt="">
+            <img src="https://place-hold.it/320x150" alt="">
             <div class="caption">
               <h4 class="pull-right">฿{{product.price}}</h4>
               <h4>{{product.name}}</h4>
@@ -30,16 +30,16 @@
               </p>
             </div>
             <div class="button-container pull-right">
-            <button type="button" class="btn btn-success center-block" >
+            <a class="btn btn-success center-block" href="/buy-product/{{product.id}}">
               <span class="glyphicon glyphicon-shopping-cart"></span> Buy
-            </button>
+            </a>
             </div>            
           </div>
         </div>
         {% endfor %}
 
         <div class="col-xs-12 text-center">
-          <a class="text-success" href="/add-product">Add new Product</a>
+          <a class="btn btn-primary" href="/add-product">Add new Product</a>
         </div>
         
       </div>

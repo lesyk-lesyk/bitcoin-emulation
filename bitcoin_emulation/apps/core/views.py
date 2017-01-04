@@ -41,13 +41,6 @@ def create_user(username, email, password):
     user.set_password(password)
     user.save()
 
-    private_key = ECC.dsa.gen_priv()
-    public_key = ECC.dsa.gen_pub(private_key)
-
-    user.userinfo.private_key = private_key
-    user.userinfo.public_key = public_key
-
-    user.save()
     return user
 
 def user_exists(username):
@@ -71,16 +64,18 @@ def shop(request):
     return render_to_response('core/shop.html', {'userMail': userMail, 'products': products})
 
 @login_required(login_url='/login/')
+def buy_product(request, product_id):
+    response = "You're trying to buy product by id: %s."
+    return HttpResponse(response % product_id)
+
+@login_required(login_url='/login/')
 def user_cabinet(request):
     userMail = request.user.email
-    private_key = request.user.userinfo.private_key
-    public_key = request.user.userinfo.public_key
+    balance = 0
     return render_to_response("core/user-cabinet.html", {
             'userMail': userMail,
-            'private_key': private_key,
-            "public_key": public_key
+            'balance': balance
         })
-
 
 class AddProductForm(forms.Form):
     name = forms.CharField(label='Name', max_length=100)

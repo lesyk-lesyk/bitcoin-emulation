@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^auth/', core_views.auth_and_login),
     url(r'^signup/', core_views.sign_up_in),
     url(r'^shop/', core_views.shop),
-    url(r'^add-product/', core_views.add_product),    
+    url(r'^add-product/', core_views.add_product),
+    url(r'^buy-product/(?P<product_id>[0-9]+)/', core_views.buy_product),      
     url(r'^$', core_views.user_cabinet)
 ]
