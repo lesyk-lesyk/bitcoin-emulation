@@ -61,7 +61,7 @@ def sign_up_in(request):
 @login_required(login_url='/login/')
 def shop(request):
     userMail = request.user.email
-    products = Product.objects.all()
+    products = Product.objects.filter(in_shop=True)
     return render_to_response('core/shop.html', {'userMail': userMail, 'products': products})
 
 @login_required(login_url='/login/')
@@ -72,16 +72,25 @@ def buy_product(request, product_id):
 
     if balance < product.price:
         return HttpResponse('You dont have enough money! You balance is %s bitcoins.' % balance)
-  
+    
+    product.in_shop = False
+    product.save()
     tr = Transaction(block=None)
     tr.save()
 
     out = Output(transaction=tr, address_x=product.public_x, address_y=product.public_y, amount=product.price)
     out.save()
 
+    print 'balance:', balance
+    print 'product price:', product.price
+    
     price_tmp = product.price
     for keypair in user.keypair_set.filter(status='active'):
         price_tmp = price_tmp - keypair.amount
+
+        print 'price_tmp:', price_tmp
+        print 'keypair.amount:', keypair.amount
+
         signature_r = 123
         signature_s = 456
         keypair.status = 'expired'
@@ -111,31 +120,38 @@ def mine(request):
     user = request.user
     prev_block = Block.objects.latest('timestamp')
 
-    prev_value = str(prev_block.timestamp) + str(prev_block.prev_hash) + str(prev_block.nonce)
-    prev_value_hash = keccak.SHA3_512(bytearray(str(prev_value).encode('utf-8')))
-    prev_value_hex = binascii.hexlify(prev_value_hash)
-
     a = random.randrange(1, 99999999999)
     for i in range(a, a+500):
-        hex_val = prev_value_hex + hex(i)
-        block_hash = keccak.SHA3_512(bytearray(str(hex_val).encode('utf-8')))
-        block_hash_hex = binascii.hexlify(block_hash)
+        hex_val = prev_block.block_hash + hex(i)
+        new_block_hash = keccak.SHA3_512(bytearray(str(hex_val).encode('utf-8')))
+        new_block_hash_hex = binascii.hexlify(new_block_hash)
 
-        if str(block_hash_hex).startswith('00'):
+        if str(new_block_hash_hex).startswith('00'):
             transactions = Transaction.objects.filter(status="pending")
             if len(transactions) < 1:
                return HttpResponse('No transactions')
             public_x, public_y = gen_key_pairs(user, REWARD)
-            new_block = Block(prev_hash=prev_block.prev_hash, nonce=i)
+            
+            new_block = Block(prev_hash=get_block_hash(prev_block), nonce=i)
             new_block.save()
+            new_block.block_hash = get_block_hash(new_block)
+            new_block.save()
+
             tr = Transaction(block=new_block, status='done')
             tr.save()
             ou = Output(transaction=tr, address_x=hex(public_x), address_y=hex(public_y), amount=REWARD)
             ou.save()
             done_transactions(transactions, new_block)
-            return HttpResponse('Congratulations, %s' % block_hash_hex)
+            return HttpResponse('Congratulations, %s' % new_block_hash_hex)
     return HttpResponse('try again')
 
+def get_block_hash(block):
+    value = str(block.timestamp) + str(block.prev_hash) + str(block.nonce)
+    value_hash = keccak.SHA3_512(bytearray(str(value).encode('utf-8')))
+    value_hex = binascii.hexlify(value_hash)
+    return value_hex
+
+    
 def done_transactions(transactions, new_block):
     for trans in transactions:
         trans.status = 'done'
@@ -199,8 +215,9 @@ def create_first(request):
     ou = Output(transaction=tr, address_x=hex(public_x), address_y=hex(public_y), amount=200)
     ou.save()    
 
-
     block = Block()
+    block.save()
+    block.block_hash = get_block_hash(block)
     block.save()
 
     tr.block = block

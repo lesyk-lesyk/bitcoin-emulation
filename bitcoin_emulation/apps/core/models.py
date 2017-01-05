@@ -38,9 +38,10 @@ class KeyPair(models.Model):
 
 class Block(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
-    prev_hash = models.CharField(max_length=500, default='')
+    prev_hash = models.CharField(max_length=500, default='0')
     nonce = models.IntegerField(default=0)
-    transactions_hash = models.CharField(max_length=500, default='')
+    transactions_hash = models.CharField(max_length=500, default='0')
+    block_hash = models.CharField(max_length=500, default='0')
 
 class Transaction(models.Model):
     block = models.ForeignKey(Block, null=True)
