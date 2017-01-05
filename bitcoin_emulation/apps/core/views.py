@@ -66,8 +66,43 @@ def shop(request):
 
 @login_required(login_url='/login/')
 def buy_product(request, product_id):
-    response = "You're trying to buy product by id: %s."
-    return HttpResponse(response % product_id)
+    user = request.user
+    balance = get_balance(user)
+    product = Product.objects.get(pk=product_id)
+
+    if balance < product.price:
+        return HttpResponse('You dont have enough money! You balance is %s bitcoins.' % balance)
+  
+    tr = Transaction(block=None)
+    tr.save()
+
+    out = Output(transaction=tr, address_x=product.public_x, address_y=product.public_y, amount=product.price)
+    out.save()
+
+    price_tmp = product.price
+    for keypair in user.keypair_set.filter(status='active'):
+        price_tmp = price_tmp - keypair.amount
+        signature_r = 123
+        signature_s = 456
+        keypair.status = 'expired'
+        keypair.save()
+        inp = Input(transaction=tr, address_x=keypair.public_x, address_y=keypair.public_y, signature_r=signature_r, signature_s=signature_s)
+        inp.save()
+        if price_tmp >= 0:
+            pass
+        else:
+            price_tmp = price_tmp * (-1)
+            private, public = ECC.make_keypair()
+            public_x, public_y = public
+            kp = KeyPair(owner=user, private=hex(private), public_x=hex(public_x), public_y=hex(public_y), amount=price_tmp)
+            kp.save()
+            change = Output(transaction=tr, address_x=public_x, address_y=public_y, amount=price_tmp)
+            change.save()
+            break
+    # inp = Input(transaction=tr, address_x=hex(public_x), address_y=hex(public_y))
+
+
+    return HttpResponse('Transaction for bying %s was created.' % product.name)
 
 @login_required(login_url='/login/')
 def user_cabinet(request):
@@ -79,7 +114,7 @@ def user_cabinet(request):
         })
 
 def get_balance(user):
-    user_keys = user.keypair_set.all()
+    user_keys = user.keypair_set.filter(status='active')
     blocks = Block.objects.all()
 
     balance = 0
@@ -93,20 +128,39 @@ def get_balance(user):
 
     return balance
 
+def gen_key_pairs(user):
+    private, public = ECC.make_keypair()
+    public_x, public_y = public
+    kp = KeyPair(owner=user, private=hex(private), public_x=hex(public_x), public_y=hex(public_y))
+    kp.save()
+    return public_x, public_y
+
 @login_required(login_url='/login/')
 def create_first(request):
     user = request.user
-    private, public = ECC.make_keypair()
-    public_x, public_y = public
-
-    kp = KeyPair(owner=user, private=hex(private), public_x=hex(public_x), public_y=hex(public_y))
-    kp.save()
 
     tr = Transaction(block=None, status='done')
     tr.save()
 
-    ou = Output(transaction=tr, address_x=hex(public_x), address_y=hex(public_y), amount=500)
+
+    private, public = ECC.make_keypair()
+    public_x, public_y = public
+
+    kp = KeyPair(owner=user, private=hex(private), public_x=hex(public_x), public_y=hex(public_y), amount=400)
+    kp.save()
+
+    ou = Output(transaction=tr, address_x=hex(public_x), address_y=hex(public_y), amount=400)
     ou.save()
+
+    private, public = ECC.make_keypair()
+    public_x, public_y = public
+
+    kp = KeyPair(owner=user, private=hex(private), public_x=hex(public_x), public_y=hex(public_y), amount=200)
+    kp.save()
+
+    ou = Output(transaction=tr, address_x=hex(public_x), address_y=hex(public_y), amount=200)
+    ou.save()    
+
 
     block = Block()
     block.save()
@@ -134,8 +188,9 @@ def add_product(request):
                 user = request.user
                 product_name = form.cleaned_data['name']
                 product_desc = form.cleaned_data['desc']
-                product_price = form.cleaned_data['price']                
-                p = Product(id=None, name=product_name, desc=product_desc, price=product_price, owner=user)
+                product_price = form.cleaned_data['price']
+                public_x, public_y = gen_key_pairs(user)
+                p = Product(id=None, name=product_name, desc=product_desc, price=product_price, owner=user, public_x=public_x, public_y=public_y)
                 p.save()
                 print p
             # redirect to a new URL:

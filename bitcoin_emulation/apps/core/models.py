@@ -25,6 +25,8 @@ class Product(models.Model):
     desc = models.CharField(max_length=500)
     price = models.IntegerField(default=0)
     in_shop = models.BooleanField(default=True)
+    public_x = models.CharField(max_length=500)
+    public_y = models.CharField(max_length=500)    
 
 class KeyPair(models.Model):
     owner = models.ForeignKey(User)
@@ -32,6 +34,7 @@ class KeyPair(models.Model):
     public_x = models.CharField(max_length=500)
     public_y = models.CharField(max_length=500)
     status = models.CharField(max_length=50, default="active")
+    amount = models.IntegerField(default=0)
 
 class Block(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
