@@ -96,13 +96,51 @@ def buy_product(request, product_id):
             public_x, public_y = public
             kp = KeyPair(owner=user, private=hex(private), public_x=hex(public_x), public_y=hex(public_y), amount=price_tmp)
             kp.save()
-            change = Output(transaction=tr, address_x=public_x, address_y=public_y, amount=price_tmp)
+            change = Output(transaction=tr, address_x=hex(public_x), address_y=hex(public_y), amount=price_tmp)
             change.save()
             break
     # inp = Input(transaction=tr, address_x=hex(public_x), address_y=hex(public_y))
 
 
     return HttpResponse('Transaction for bying %s was created.' % product.name)
+
+import random
+REWARD = 150
+@login_required(login_url='/login/')
+def mine(request):
+    user = request.user
+    prev_block = Block.objects.latest('timestamp')
+
+    prev_value = str(prev_block.timestamp) + str(prev_block.prev_hash) + str(prev_block.nonce)
+    prev_value_hash = keccak.SHA3_512(bytearray(str(prev_value).encode('utf-8')))
+    prev_value_hex = binascii.hexlify(prev_value_hash)
+
+    a = random.randrange(1, 99999999999)
+    for i in range(a, a+500):
+        hex_val = prev_value_hex + hex(i)
+        block_hash = keccak.SHA3_512(bytearray(str(hex_val).encode('utf-8')))
+        block_hash_hex = binascii.hexlify(block_hash)
+
+        if str(block_hash_hex).startswith('00'):
+            transactions = Transaction.objects.filter(status="pending")
+            if len(transactions) < 1:
+               return HttpResponse('No transactions')
+            public_x, public_y = gen_key_pairs(user, REWARD)
+            new_block = Block(prev_hash=prev_block.prev_hash, nonce=i)
+            new_block.save()
+            tr = Transaction(block=new_block, status='done')
+            tr.save()
+            ou = Output(transaction=tr, address_x=hex(public_x), address_y=hex(public_y), amount=REWARD)
+            ou.save()
+            done_transactions(transactions, new_block)
+            return HttpResponse('Congratulations, %s' % block_hash_hex)
+    return HttpResponse('try again')
+
+def done_transactions(transactions, new_block):
+    for trans in transactions:
+        trans.status = 'done'
+        trans.block = new_block
+        trans.save()
 
 @login_required(login_url='/login/')
 def user_cabinet(request):
@@ -128,10 +166,10 @@ def get_balance(user):
 
     return balance
 
-def gen_key_pairs(user):
+def gen_key_pairs(user, amount):
     private, public = ECC.make_keypair()
     public_x, public_y = public
-    kp = KeyPair(owner=user, private=hex(private), public_x=hex(public_x), public_y=hex(public_y))
+    kp = KeyPair(owner=user, private=hex(private), public_x=hex(public_x), public_y=hex(public_y), amount=amount)
     kp.save()
     return public_x, public_y
 
@@ -189,8 +227,8 @@ def add_product(request):
                 product_name = form.cleaned_data['name']
                 product_desc = form.cleaned_data['desc']
                 product_price = form.cleaned_data['price']
-                public_x, public_y = gen_key_pairs(user)
-                p = Product(id=None, name=product_name, desc=product_desc, price=product_price, owner=user, public_x=public_x, public_y=public_y)
+                public_x, public_y = gen_key_pairs(user, 0)
+                p = Product(id=None, name=product_name, desc=product_desc, price=product_price, owner=user, public_x=hex(public_x), public_y=hex(public_y))
                 p.save()
                 print p
             # redirect to a new URL:
