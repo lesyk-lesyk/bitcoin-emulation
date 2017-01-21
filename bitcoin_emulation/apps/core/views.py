@@ -91,8 +91,12 @@ def buy_product(request, product_id):
         print 'price_tmp:', price_tmp
         print 'keypair.amount:', keypair.amount
 
-        signature_r = 123
-        signature_s = 456
+
+        message = keypair.public_x + keypair.public_y
+        signature = ECC.sign_message(int(keypair.private, 0), message)
+
+        signature_r, signature_s = signature
+
         keypair.status = 'expired'
         keypair.save()
         inp = Input(transaction=tr, address_x=keypair.public_x, address_y=keypair.public_y, signature_r=signature_r, signature_s=signature_s)
@@ -113,6 +117,37 @@ def buy_product(request, product_id):
 
     return HttpResponse('Transaction for bying %s was created.' % product.name)
 
+def get_transactions_hash(transactions):
+    hashes_sum = ''
+    for transaction in transactions:
+        hashes_sum += get_trans_hash(transaction)
+    return get_hash_str(hashes_sum)
+
+def get_trans_hash(transaction):
+    inputs = transaction.input_set.all().values()
+    outputs = transaction.output_set.all().values()
+    return get_hash_str(get_hash_str(inputs)+get_hash_str(outputs))
+
+def get_hash_str(s_value):
+    hash_v = keccak.SHA3_512(bytearray(str(s_value).encode('utf-8')))
+    hash_hex = binascii.hexlify(hash_v)
+    return hash_hex
+
+# def verify_transactions(transactions):
+#     for transaction in transactions:
+#         inputs = transaction.input_set.all()
+#         for _input in inputs:
+#             message = _input.address_x + _input.address_y
+#             print _input.address_x, _input.address_y
+#             # print (int(_input.address_x, 16), int(_input.address_y, 16))
+#             print message
+#             print (_input.signature_r, _input.signature_s)
+#             sign_res = ECC.verify_signature((_input.address_x, _input.address_y), message, (_input.signature_r, _input.signature_s))
+#             if  sign_res == 'signature matches':
+#                 print 'ok'
+#             else:
+#                 print 'bad'
+
 import random
 REWARD = 150
 @login_required(login_url='/login/')
@@ -121,12 +156,12 @@ def mine(request):
     prev_block = Block.objects.latest('timestamp')
 
     a = random.randrange(1, 99999999999)
-    for i in range(a, a+500):
+    for i in range(a, a+2000):
         hex_val = prev_block.block_hash + hex(i)
         new_block_hash = keccak.SHA3_512(bytearray(str(hex_val).encode('utf-8')))
         new_block_hash_hex = binascii.hexlify(new_block_hash)
 
-        if str(new_block_hash_hex).startswith('00'):
+        if str(new_block_hash_hex).startswith('0000'):
             transactions = Transaction.objects.filter(status="pending")
             if len(transactions) < 1:
                return HttpResponse('No transactions')
@@ -142,6 +177,11 @@ def mine(request):
             ou = Output(transaction=tr, address_x=hex(public_x), address_y=hex(public_y), amount=REWARD)
             ou.save()
             done_transactions(transactions, new_block)
+
+            transactions_hash = get_transactions_hash(transactions)
+            new_block.transactions_hash = transactions_hash
+            new_block.save()
+            
             return HttpResponse('Congratulations, %s' % new_block_hash_hex)
     return HttpResponse('try again')
 
@@ -158,10 +198,19 @@ def done_transactions(transactions, new_block):
         trans.block = new_block
         trans.save()
 
+def verify_block_transactions(block_id):
+    block = Block.objects.get(pk=block_id)
+    print block.block_hash
+
 @login_required(login_url='/login/')
 def user_cabinet(request):
     userMail = request.user.email
     balance = get_balance(request.user)
+
+    # all_transactions = Transaction.objects.all()
+    # get_transactions_hash(all_transactions)
+    # verify_block_transactions()
+
     return render_to_response("core/user-cabinet.html", {
             'userMail': userMail,
             'balance': balance
